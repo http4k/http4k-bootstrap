@@ -3,8 +3,7 @@
 Create a full deployment pipeline (Github -> TravisCI -> Heroku) using a single command:
 
 ```bash
-curl -s https://raw.githubusercontent.com/http4k/http4k-bootstrap/master/create-app.sh \
-  | bash
+curl -s https://raw.githubusercontent.com/http4k/http4k-bootstrap/master/create-app.sh | bash
 ```
 
 This should generate an output like the following:
