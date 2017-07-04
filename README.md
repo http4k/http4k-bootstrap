@@ -1,6 +1,6 @@
 # http4k-bootstrap
 
-Create a full deployment pipeline (Github -> TravisCI -> Heroku) using a single command:
+Create a full deployment pipeline (Github -> TravisCI -> Heroku) of a working http4k application using a single command:
 
 ```bash
 curl -s https://raw.githubusercontent.com/http4k/http4k-bootstrap/master/create-app.sh  \
