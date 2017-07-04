@@ -94,7 +94,7 @@ function enable_travis_for_repo { # Retry because github repo may take a bit of 
    echo "Enabling TravisCI..."
    local n=0
    until [ ${n} -ge 5 ]; do
-      result=$(enable_travis $1) && echo ${result} && return
+      result=$(enable_travis $1) && return
       n=$[$n+1]
       sleep 10
    done
