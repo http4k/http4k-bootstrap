@@ -87,8 +87,7 @@ function enable_travis {
     if [ "${RESULT}" != "true" ]; then
         echo "Failed to enable repo"
         return 1
-    fi
-    echo "TravisCI enabled for $REPO_PATH"
+    fi    
 }
 
 function enable_travis_for_repo { # Retry because github repo may take a bit of time to become visible to travis
@@ -113,8 +112,9 @@ function update_travis_file {
     cd "$DIR/$APP_NAME"
     sed -E -i '' "s@(.*secure: ).*@\1$HEROKU_KEY@g" .travis.yml
     sed -E -i '' "s@(.*app: ).*@\1$APP_NAME@g" .travis.yml
-    git commit -am"Configure TravisCI"
-    git push -u origin master
+    echo "Pushing deployment configuration..."
+    git commit -am"Configure TravisCI" &> /dev/null
+    git push -u origin master &> /dev/null
 }
 
 function encrypt_heroku_key {
@@ -131,9 +131,10 @@ function encrypt_heroku_key {
 }
 
 function clone_skeleton {
+    echo "Preparing application skeleton..."
     local NAME=$1
-    local REPO_DIR="${DIR}/$NAME"
-    git clone "https://github.com/http4k/http4k-heroku-travis-example-app.git" "$REPO_DIR"
+    local REPO_DIR="${DIR}/$NAME"    
+    git clone "https://github.com/http4k/http4k-heroku-travis-example-app.git" "$REPO_DIR" &> /dev/null
     cd ${REPO_DIR}
     git remote rm origin
     git remote add origin "git@github.com:${GITHUB_USERNAME}/${NAME}.git"
@@ -167,3 +168,10 @@ create_github_repo ${APP_NAME}
 enable_travis_for_repo ${APP_NAME}
 clone_skeleton ${APP_NAME}
 update_travis_file ${APP_NAME}
+
+echo "
+Your application should be now ready:
+ * Source code: ${DIR}/${APP_NAME}
+ * TravisCI: https://travis-ci.org/${GITHUB_USERNAME}/${APP_NAME}
+ * Heroku deployment: http://${APP_NAME}.herokuapp.com
+"
