@@ -139,6 +139,15 @@ function clone_skeleton {
     git remote add origin "git@github.com:${GITHUB_USERNAME}/${NAME}.git"
 }
 
+function check_existing_dir {
+    local NAME=$1
+    local REPO_DIR="${DIR}/$NAME"
+    if [ -d "${REPO_DIR}" ]; then
+        echo "Directory '${REPO_DIR}' already exist. Aborting."
+        exit 1
+    fi
+}
+
 ensure_command "jq"
 ensure_command "openssl"
 check_env
@@ -152,6 +161,7 @@ fi
 
 printf "Setting up ${APP_NAME}\n\n"
 
+check_existing_dir ${APP_NAME}
 create_heroku_app ${APP_NAME}
 create_github_repo ${APP_NAME}
 enable_travis_for_repo ${APP_NAME}
