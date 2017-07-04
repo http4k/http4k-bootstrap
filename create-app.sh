@@ -5,7 +5,11 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]:-.}" )" && pwd )"jq="jq"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]:-.}" )" && pwd )"
+
+GITHUB_USERNAME=${GITHUB_USERNAME:-}
+GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN:-}
+HEROKU_API_KEY=${HEROKU_API_KEY:-}
 
 function ensure_command {
     COMMAND=$1
@@ -14,23 +18,24 @@ function ensure_command {
 
 function check_env {
     local missing_env=false
-    if [[ -z "${GITHUB_USERNAME:-}" ]]; then
+    if [[ -z "${GITHUB_USERNAME}" ]]; then
         echo "GITHUB_USERNAME is required"
         missing_env=true
     fi
-    if [[ -z "${GITHUB_PERSONAL_ACCESS_TOKEN:-}" ]]; then
-        echo "GITHUB_PERSONAL_ACCESS_TOKEN is required (You can generate one in https://github.com/settings/tokens)"
+    if [[ -z "${GITHUB_PERSONAL_ACCESS_TOKEN}" ]]; then
+        echo "GITHUB_PERSONAL_ACCESS_TOKEN is required (see https://github.com/settings/tokens)"
         missing_env=true
     fi
-    if [[ -z "${HEROKU_API_KEY:-}" ]]; then
-        echo "HEROKU_API_KEY is required (You can see yours in https://dashboard.heroku.com/account#api-key)"
+    if [[ -z "${HEROKU_API_KEY}" ]]; then
+        echo "HEROKU_API_KEY is required (see https://dashboard.heroku.com/account#api-key)"
         missing_env=true
     fi
     if [[ "${missing_env}" == "true" ]]; then
-        echo "Aborting"
+        printf "\nPlease set the required environment variables and try again.\n"
         exit 1
     fi
 }
+
 function create_heroku_app {
     echo "Creating Heroku app..."
     local NAME=$1
@@ -50,11 +55,11 @@ function create_repo {
     echo "Creating GitHub repository..."
 	local NAME=$1
 	local CREDENTIALS="$GITHUB_USERNAME:$GITHUB_PERSONAL_ACCESS_TOKEN"
-	local STATUS=$(curl --silent -u $CREDENTIALS -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" -X POST --data "{\"name\": \"${NAME}\"}" https://api.github.com/user/repos)
+	local STATUS=$(curl --silent -u ${CREDENTIALS} -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" -X POST --data "{\"name\": \"${NAME}\"}" https://api.github.com/user/repos)
 
-    local HAS_ERRORS=$(echo $STATUS | jq '.errors | length == 0')
+    local HAS_ERRORS=$(echo ${STATUS} | jq '.errors | length == 0')
 	if [ "${HAS_ERRORS}" == "false" ]; then
-        local MESSAGE=$(echo $STATUS | jq '.errors[0].message')
+        local MESSAGE=$(echo ${STATUS} | jq '.errors[0].message')
 	    echo "Failed to create repository '$NAME': $MESSAGE"
 		exit -1
 	fi
@@ -66,7 +71,7 @@ function retrieve_travis_token {
         echo "Failed to obtain TravisCI token."
         exit -1
     fi
-    echo $TRAVIS_ACCESS_TOKEN
+    echo ${TRAVIS_ACCESS_TOKEN}
 }
 
 function enable_travis {
@@ -104,21 +109,20 @@ function encrypt_heroku_key {
     TOKEN=$1
     TRAVIS_REPO_ID=$2
     HEROKU_API_KEY=$3
-    TEMP_FILE=$(mktemp)
-    KEY=$(curl --silent -H "Authorization: token $TOKEN" -H "User-Agent: Travis-http4k-boostrap/1.0" -H "Content-Type: application/json" "https://api.travis-ci.org/repos/${TRAVIS_REPO_ID}/key" | jq -r .key > $TEMP_FILE)
-    if [[ -z "$(cat $TEMP_FILE)" ]]; then
+    TEMP_FILE="$(mktemp)"
+    KEY=$(curl --silent -H "Authorization: token $TOKEN" -H "User-Agent: Travis-http4k-boostrap/1.0" -H "Content-Type: application/json" "https://api.travis-ci.org/repos/${TRAVIS_REPO_ID}/key" | jq -r .key > ${TEMP_FILE})
+    if [[ -z "$(cat ${TEMP_FILE})" ]]; then
         echo "Failed to retrieve TravisCI key."
         exit -1
     fi
-    ENCRYPTED_HEROKU_KEY=$(echo -n $HEROKU_API_KEY | openssl rsautl -encrypt -pubin -inkey $TEMP_FILE | base64)
-    echo $ENCRYPTED_HEROKU_KEY
+    echo -n ${HEROKU_API_KEY} | openssl rsautl -encrypt -pubin -inkey ${TEMP_FILE} | base64
 }
 
 function clone_skeleton {
     local NAME=$1
     local REPO_DIR="${DIR}/$NAME"
     git clone "https://github.com/http4k/http4k-heroku-travis-example-app.git" "$REPO_DIR"
-    cd $REPO_DIR
+    cd ${REPO_DIR}
     git remote rm origin
     git remote add origin "git@github.com:${GITHUB_USERNAME}/${NAME}.git"
 }
@@ -149,5 +153,3 @@ create_repo ${APP_NAME}
 enable_travis_with_retry ${APP_NAME}
 clone_skeleton ${APP_NAME}
 update_travis_file ${APP_NAME}
-
-
