@@ -153,10 +153,10 @@ ensure_command "jq"
 ensure_command "openssl"
 check_env
 
-APP_NAME=${1:-}
+read -p "Enter your app name: " APP_NAME
 
 if [[ -z "${APP_NAME:-}" ]]; then
-    echo "Usage: $0 <app-name>" >/dev/stderr
+    echo "App name is required. Aborting." >/dev/stderr
     exit 1
 fi
 
