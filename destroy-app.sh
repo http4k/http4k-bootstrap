@@ -38,3 +38,7 @@ APP_NAME=$1
 
 delete_heroku_app ${APP_NAME}
 delete_github_repo ${APP_NAME}
+
+if [ -d "${DIR}/${APP_NAME}" ]; then
+  rm -R "${DIR}/${APP_NAME}"
+fi      
