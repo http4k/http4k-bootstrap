@@ -51,7 +51,7 @@ function create_heroku_app {
     fi
 }
 
-function create_repo {
+function create_github_repo {
     echo "Creating GitHub repository..."
 	local NAME=$1
 	local CREDENTIALS="$GITHUB_USERNAME:$GITHUB_PERSONAL_ACCESS_TOKEN"
@@ -91,6 +91,16 @@ function enable_travis {
     echo "TravisCI enabled for $REPO_PATH"
 }
 
+function enable_travis_for_repo { # Retry because github repo may take a bit of time to become visible to travis
+   echo "Enabling TravisCI..."
+   local n=0
+   until [ ${n} -ge 5 ]; do
+      result=$(enable_travis $1) && echo ${result} && break
+      n=$[$n+1]
+      sleep 10
+   done
+}
+
 function update_travis_file {
     APP_NAME=$1
     TRAVIS_ACCESS_TOKEN=$(retrieve_travis_token)
@@ -127,16 +137,6 @@ function clone_skeleton {
     git remote add origin "git@github.com:${GITHUB_USERNAME}/${NAME}.git"
 }
 
-function enable_travis_with_retry {
-    echo "Enabling TravisCI..."
-   local n=0
-   until [ ${n} -ge 5 ]; do
-      result=$(enable_travis $1) && echo ${result} && break
-      n=$[$n+1]
-      sleep 10
-   done
-}
-
 ensure_command "jq"
 ensure_command "openssl"
 check_env
@@ -148,8 +148,10 @@ if [[ -z "${APP_NAME:-}" ]]; then
     exit 1
 fi
 
+printf "Setting up ${APP_NAME}\n\n"
+
 create_heroku_app ${APP_NAME}
-create_repo ${APP_NAME}
-enable_travis_with_retry ${APP_NAME}
+create_github_repo ${APP_NAME}
+enable_travis_for_repo ${APP_NAME}
 clone_skeleton ${APP_NAME}
 update_travis_file ${APP_NAME}
