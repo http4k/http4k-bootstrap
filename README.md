@@ -24,3 +24,15 @@ Your application should be now ready:
  * TravisCI: https://travis-ci.org/my-github-user/my-awesome-app
  * Heroku deployment: http://my-awesome-app.herokuapp.com
 ```
+
+## Prerequisites
+
+* A [GitHub](https://github.com) account.
+* A [Heroku](https://www.heroku.com) account.
+* The following commands available in your terminal:
+  * `jq`
+  * `openssl`
+* The following environment variables set:
+  * `GITHUB_USERNAME` set to the user who'll own your application's git repository.
+  * `GITHUB_PERSONAL_ACCESS_TOKEN` for the [GitHub Personal Access Token](https://github.com/settings/tokens) to be used by the script to set up your repository and TravisCI (the owner must be the same user defined above).
+  * `HEROKU_API_KEY` for the [Heroku API Key](https://dashboard.heroku.com/account#api-key) to be used by the script to create your app.
