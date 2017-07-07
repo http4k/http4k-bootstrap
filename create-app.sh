@@ -127,7 +127,7 @@ function encrypt_heroku_key {
         echo "Failed to retrieve TravisCI key."
         exit -1
     fi
-    echo -n ${HEROKU_API_KEY} | openssl rsautl -encrypt -pubin -inkey ${TEMP_FILE} | base64 || echo "Failed to encrypt using ${TEMP_FILE}"
+    echo -n ${HEROKU_API_KEY} | openssl rsautl -encrypt -pubin -inkey ${TEMP_FILE} | base64
 }
 
 function clone_skeleton {
@@ -138,8 +138,8 @@ function clone_skeleton {
     cd ${REPO_DIR}
     git remote rm origin
     git remote add origin "git@github.com:${GITHUB_USERNAME}/${NAME}.git"
-    sed -i '' "s/rootProject.name = '.*'/rootProject.name = '${NAME}'/g" settings.gradle
-    git commit -am"Rename gradle project" &> /dev/null
+    ${REPO_DIR}/rename.sh "${NAME}"
+    git commit -am"Rename application" &> /dev/null
 }
 
 function check_existing_dir {
