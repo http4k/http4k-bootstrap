@@ -127,7 +127,7 @@ function encrypt_heroku_key {
         echo "Failed to retrieve TravisCI key."
         exit -1
     fi
-    echo -n ${HEROKU_API_KEY} | openssl rsautl -encrypt -pubin -inkey ${TEMP_FILE} | base64
+    echo -n ${HEROKU_API_KEY} | openssl rsautl -encrypt -pubin -inkey ${TEMP_FILE} | base64 || echo "Failed to encrypt using ${TEMP_FILE}"
 }
 
 function clone_skeleton {
