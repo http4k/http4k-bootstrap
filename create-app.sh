@@ -138,6 +138,8 @@ function clone_skeleton {
     cd ${REPO_DIR}
     git remote rm origin
     git remote add origin "git@github.com:${GITHUB_USERNAME}/${NAME}.git"
+    sed -i '' "s/rootProject.name = '.*'/rootProject.name = '${NAME}'/g" settings.gradle
+    git commit -am"Rename gradle project" &> /dev/null
 }
 
 function check_existing_dir {
